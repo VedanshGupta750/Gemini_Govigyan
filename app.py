@@ -3,24 +3,17 @@ import psycopg2
 import psycopg2.extensions
 import traceback
 import os
+import re
 from PIL import Image
 import google.generativeai as genai
 from dotenv import load_dotenv
 import fitz  # PyMuPDF
 from io import BytesIO
-from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
 
-# Initialize Flask app
-app = Flask(__name__)
-
-# Enable CORS for all routes and all origins (for development)
-CORS(app)
-
-# Load environment variables
-load_dotenv()
+load_dotenv()  # Load environment variables
 
 # --- Database Functions ---
+
 def create_database_if_not_exists(dbname, user, password, host, port):
     try:
         print("[DB_SETUP] Connecting to default 'postgres' database...")
@@ -136,6 +129,7 @@ def insert_data_into_postgres(data_list, dbname, user, password, host, port, tab
         if conn: conn.close(); print("[DB_INSERT] Connection closed.")
 
 # --- Helper Function to Process Different Input Types ---
+
 def process_input_files(input_files):
     image_paths = []
     for file_path in input_files:
@@ -169,41 +163,8 @@ def process_input_files(input_files):
             print(f"[WARNING] Skipping unsupported file type: {file_path}")
     return image_paths
 
-# --- Modified to Process Uploaded Files ---
-def process_uploaded_files(uploaded_files):
-    image_paths = []
-    for file in uploaded_files:
-        if file and hasattr(file, 'filename'):
-            filename = file.filename
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
-                file_path = f"/tmp/{filename}"  # Use /tmp for Render.com compatibility
-                file.save(file_path)
-                image_paths.append(file_path)
-                print(f"[IMAGE] Saved uploaded image: {file_path}")
-            elif filename.lower().endswith('.pdf'):
-                file_path = f"/tmp/{filename}"
-                file.save(file_path)
-                print(f"[PDF] Processing uploaded PDF {file_path}...")
-                try:
-                    doc = fitz.open(file_path)
-                    for page_num in range(len(doc)):
-                        page = doc.load_page(page_num)
-                        pix = page.get_pixmap()
-                        img_data = pix.tobytes("jpeg")
-                        img = Image.open(BytesIO(img_data))
-                        output_path = f"/tmp/temp_pdf_page_{page_num}.jpg"
-                        img.save(output_path, 'JPEG')
-                        image_paths.append(output_path)
-                        print(f"  - Converted page {page_num} to {output_path}")
-                    doc.close()
-                except Exception as e:
-                    print(f"[ERROR] Failed to process PDF {file_path}: {e}")
-                    traceback.print_exc()
-            else:
-                print(f"[WARNING] Skipping unsupported file type: {filename}")
-    return image_paths
-
 # --- Gemini Interaction Function (Multimodal) ---
+
 def extract_json_from_images_with_gemini(image_paths, api_key):
     print("[GEMINI] Configuring Gemini...")
     try:
@@ -273,7 +234,7 @@ def extract_json_from_images_with_gemini(image_paths, api_key):
         elif raw_json_text.startswith('[') or raw_json_text.startswith('{'):
             pass  # Already looks like JSON, proceed
         else:
-            json_match = re.search(r'\{.*\}|$$     .*     $$', raw_json_text, re.DOTALL)
+            json_match = re.search(r'\{.*\}|$$ .* $$', raw_json_text, re.DOTALL)
             if json_match:
                 raw_json_text = json_match.group(0).strip()
             else:
@@ -314,55 +275,61 @@ def extract_json_from_images_with_gemini(image_paths, api_key):
             print(f"        Safety Ratings: {response.candidates[0].safety_ratings}")
         return None
 
-# --- API Endpoint ---
-@app.route('/process', methods=['POST'])
-def process_files():
-    print("[API] Received /process request.")
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part in the request"}), 400
+# --- Main Execution Block ---
 
-    files = request.files.getlist('file')  # Handle multiple files
-    if not files or all(file.filename == '' for file in files):
-        return jsonify({"error": "No selected files"}), 400
+if __name__ == '__main__':
+    print("[MAIN] Starting script...")
 
-    # Process uploaded files
-    image_paths = process_uploaded_files(files)
+    # --- Configuration ---
+    input_files = [
+        'new_img.jpg',  # Single image
+        
+    ]
+
+    # Process input files (images and PDFs)
+    image_paths = process_input_files(input_files)
 
     if not image_paths:
-        return jsonify({"error": "No valid image files processed"}), 400
+        print("[ERROR] No valid image files found to process.")
+        exit(1)
 
-    # Load environment variables
-    gemini_api_key = os.environ.get('GEMINI_API_KEY')
-    if not gemini_api_key:
-        return jsonify({"error": "GEMINI_API_KEY not set in environment"}), 500
-
-    db_name = os.environ.get('DB_NAME', 'govigyan')
+    # --- Load Environment Variables ---
+    db_name = os.environ.get('DB_NAME', 'govigyan_qvyz')
     db_user = os.environ.get('DB_USER', 'govigyan_user')
-    db_password = os.environ.get('DB_PASSWORD', '1yOT2yAAQ0FO7bL7iKo7C7W26dLFOm2j')
-    db_host = os.environ.get('DB_HOST', 'dpg-cvrp2fili9vc739krvd0-a.oregon-postgres.render.com')
+    db_password = os.environ.get('DB_PASSWORD', 'HKfQFPof1FXx0fFjJBTx0ZOsUniORAAkd')
+    db_host = os.environ.get('DB_HOST', 'dpg-d1d9sgidbo4c73cj8r90-a.oregon-postgres.render.com')
     db_port = os.environ.get('DB_PORT', 5432)
     table = 'StockBook'
 
-    # Create database if not exists
+    # --- Hardcode Gemini API Key for Testing (Remove this in production) ---
+    gemini_api_key = "AIzaSyAUWoitjt-MMI2HOYyq3gVj3J6juWrbQds"
+
+    if not gemini_api_key:
+        print("="*60)
+        print("[ERROR] The GEMINI_API_KEY is missing. Please set it in your environment or hardcode it.")
+        print("="*60)
+        exit(1)
+
+    print(f"[MAIN] Using Gemini API Key: {gemini_api_key[:10]}... (partial for security)")
+
+    # --- Step 1: Create DB if not exists ---
+    print("[MAIN] === Step 1: Ensure Database Exists ===")
     create_database_if_not_exists(db_name, db_user, db_password, db_host, db_port)
 
-    # Extract data using Gemini
+    # --- Step 2: Extract Data using Gemini (Multimodal) ---
+    print("\n[MAIN] === Step 2: Extract Data from Images using Gemini ===")
     extracted_data = extract_json_from_images_with_gemini(image_paths, gemini_api_key)
 
+    # --- Step 3: Insert Extracted Data into Table ---
     if extracted_data:
-        # Insert data into PostgreSQL
+        print("\n[MAIN] === Step 3: Insert Extracted Data into PostgreSQL ===")
         insert_data_into_postgres(extracted_data, db_name, db_user, db_password, db_host, db_port, table)
-        return jsonify({"message": "Data processed and inserted successfully", "data": extracted_data}), 200
     else:
-        return jsonify({"error": "Failed to extract data from images"}), 500
+        print("\n[MAIN] === Step 3: Skipped Data Insertion (Extraction failed or returned no data) ===")
 
-    # Clean up temporary files
-    for temp_file in [f for f in os.listdir('/tmp') if f.startswith('temp_pdf_page_')]:
-        os.remove(f"/tmp/{temp_file}")
-        print(f"[CLEANUP] Removed temporary file: /tmp/{temp_file}")
+    # Clean up temporary files (if any)
+    for temp_file in [f for f in os.listdir('.') if f.startswith('temp_pdf_page_')]:
+        os.remove(temp_file)
+        print(f"[CLEANUP] Removed temporary file: {temp_file}")
 
-    return jsonify({"message": "Processing complete"}), 200
-
-if __name__ == '__main__':
-    # Run Flask app (for local testing)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    print("\n[MAIN] Script finished.")
