@@ -392,7 +392,7 @@ def process_files():
 
         if extracted_data:
             # Insert data into PostgreSQL
-            insert_data_into_into_postgres(extracted_data, db_name, db_user, db_password, db_host, db_port, table) # Typo fixed
+            insert_data_into_postgres(extracted_data, db_name, db_user, db_password, db_host, db_port, table) # Typo fixed
             return jsonify({"message": "Data processed and inserted successfully", "data": extracted_data}), 200
         else:
             return jsonify({"error": "Failed to extract data from images"}), 500
