@@ -13,7 +13,7 @@ from flask_cors import CORS # Import CORS
 import re # Make sure 're' module is imported for regex operations
 
 # Initialize Flask app
-app = Flask(__ON_RENDER_STARTUP__) # Use __name__ instead of 'ON_RENDER_STARTUP' for Flask app initialization
+app = Flask(__name__) # Use __name__ instead of 'ON_RENDER_STARTUP' for Flask app initialization
 
 # Enable CORS for all routes and all origins (for development)
 CORS(app)
