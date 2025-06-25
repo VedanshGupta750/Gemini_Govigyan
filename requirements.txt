@@ -33,7 +33,7 @@ PyMuPDF==1.25.5
 # HTTP and networking
 requests==2.32.3
 urllib3==2.3.0
-certifi==2025.1.31
+certifi==2024.8.30
 charset-normalizer==3.4.1
 idna==3.10
 
