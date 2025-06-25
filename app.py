@@ -72,7 +72,7 @@ def insert_data_into_postgres(data_list, dbname, user, password, host, port, tab
                 create_table_query = f"""
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
                     "Entry_ID" SERIAL PRIMARY KEY,
-                    "DATE" TEXT,
+                    "DATE" DATE, -- <--- CHANGED FROM TEXT TO DATE
                     "PARTICULARS" TEXT,
                     "Voucher_BillNo" TEXT,
                     "RECEIPTS_Quantity" INTEGER,
@@ -115,7 +115,7 @@ def insert_data_into_postgres(data_list, dbname, user, password, host, port, tab
                             "ISSUED_Quantity", "ISSUED_Amount",
                             "BALANCE_Quantity", "BALANCE_Amount"
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        VALUES (TO_DATE(%s, 'DD/MM/YY'), %s, %s, %s, %s, %s, %s, %s, %s); -- <--- CHANGE IS HERE
                     """
                     try:
                         cur.execute(sql, (
@@ -379,7 +379,7 @@ def process_files():
         db_name = os.environ.get('DB_NAME', 'govigyan_qvyz') 
         db_user = os.environ.get('DB_USER', 'govigyan_user')
         db_password = os.environ.get('DB_PASSWORD', 'HKfQFPof1FXx0fFjJBTx0ZOsUniORAAkd')
-        db_host = os.environ.get('DB_HOST', 'dpg-d1d9sgidbo4c73cj8r90-a') 
+        db_host = os.environ.get('DB_HOST', 'dpg-d1d9sgidbo4c73cj8r90-a') # Kept your original default
         db_port = int(os.environ.get('DB_PORT', 5432)) # Convert port to int
 
         table = 'StockBook'
@@ -392,7 +392,7 @@ def process_files():
 
         if extracted_data:
             # Insert data into PostgreSQL
-            insert_data_into_postgres(extracted_data, db_name, db_user, db_password, db_host, db_port, table) # Typo fixed
+            insert_data_into_postgres(extracted_data, db_name, db_user, db_password, db_host, db_port, table)
             return jsonify({"message": "Data processed and inserted successfully", "data": extracted_data}), 200
         else:
             return jsonify({"error": "Failed to extract data from images"}), 500
