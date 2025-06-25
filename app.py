@@ -30,7 +30,7 @@ def create_database_if_not_exists(dbname, user, password, host, port):
     try:
         print("[DB_SETUP] Connecting to default 'postgres' database...")
         # Ensure sslmode='require' for Render.com PostgreSQL connections
-        with psycopg2.connect(dbname='postgres', user=user, password=password, host=host, port=port, sslmode='require') as conn:
+        with psycopg2.connect(dbname='postgres', user=user, password=password, host=host, port=port, sslmode='require',keepalives=1,keepalives_idle=30,keepalives_interval=10,keepalives_count=5) as conn:
             # Set isolation level to allow DDL commands outside a transaction block
             conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
             print("[DB_SETUP] Connected successfully.")
