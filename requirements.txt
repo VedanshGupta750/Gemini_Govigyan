@@ -1,87 +1,61 @@
-annotated-types
-blinker
-cachetools
-certifi
-charset-normalizer
-click
-colorama
-dotenv
-Flask
-google-ai-generativelanguage
-google-api-core
-google-api-python-client
-google-auth
-google-auth-httplib2
-google-generativeai
-googleapis-common-protos
-grpcio
-grpcio-status
-httplib2
-idna
-itsdangerous
-Jinja2
-MarkupSafe
-pillow
-proto-plus
-protobuf
-psycopg-binary
-psycopg2-binary
-pyasn1
-pyasn1_modules
-pydantic
-pydantic_core
-PyMuPDF
-pyparsing
-python-dotenv
-requests
-rsa
-tqdm
-typing-inspection
-typing_extensions
-uritemplate
-urllib3
-Werkzeug
-annotated-types==0.7.0
-blinker==1.9.0
-cachetools==5.5.2
-certifi==2025.1.31
-charset-normalizer==3.4.1
-click==8.1.8
-colorama==0.4.6
-dotenv==0.9.9
+# Core Flask dependencies
 Flask==3.1.0
-flask-cors==5.0.1
+flask-cors==5.0.1  # Explicitly added for CORS support
+Werkzeug==3.1.3
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+itsdangerous==2.2.0
+click==8.1.8
+blinker==1.9.0
+
+# Database connectivity
+psycopg2-binary==2.9.10  # Keep for PostgreSQL, latest stable for SSL support
+
+# Google Gemini API dependencies
+google-generativeai==0.8.4
 google-ai-generativelanguage==0.6.15
 google-api-core==2.24.2
 google-api-python-client==2.166.0
 google-auth==2.38.0
 google-auth-httplib2==0.2.0
-google-generativeai==0.8.4
 googleapis-common-protos==1.69.2
-grpcio==1.72.0rc1
+grpcio==1.72.0  # Updated from pre-release 1.72.0rc1 to stable
 grpcio-status==1.71.0
-httplib2==0.22.0
-idna==3.10
-itsdangerous==2.2.0
-Jinja2==3.1.6
-MarkupSafe==3.0.2
-pillow==11.1.0
 proto-plus==1.26.1
 protobuf==5.29.4
-psycopg-binary==3.2.6
-psycopg2-binary==2.9.10
-pyasn1==0.6.1
-pyasn1_modules==0.4.2
+httplib2==0.22.0
+uritemplate==4.1.1
+
+# Image and PDF processing
+pillow==11.1.0
+PyMuPDF==1.25.5
+
+# HTTP and networking
+requests==2.32.3
+urllib3==2.3.0
+certifi==2025.1.31
+charset-normalizer==3.4.1
+idna==3.10
+
+# Environment variable management
+python-dotenv==1.1.0  # Keep, replaces outdated 'dotenv'
+
+# Pydantic for data validation
 pydantic==2.11.3
 pydantic_core==2.33.1
-PyMuPDF==1.25.5
-pyparsing==3.2.3
-python-dotenv==1.1.0
-requests==2.32.3
-rsa==4.9
-tqdm==4.67.1
-typing-inspection==0.4.0
+annotated-types==0.7.0
 typing_extensions==4.13.1
-uritemplate==4.1.1
-urllib3==2.3.0
-Werkzeug==3.1.3
+typing-inspection==0.4.0
+
+# Authentication and parsing utilities
+pyasn1==0.6.1
+pyasn1_modules==0.4.2
+rsa==4.9
+pyparsing==3.2.3
+
+# Progress bar
+tqdm==4.67.1
+
+# Miscellaneous
+cachetools==5.5.2
+colorama==0.4.6
